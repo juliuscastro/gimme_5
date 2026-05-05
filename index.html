@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIMME 5 - Laro ng mga Henyo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            font-family: 'Press Start 2P', system-ui;
+        }
+
+        .answer-box {
+            transition: all 0.4s ease;
+            box-shadow: 0 0 25px rgba(34, 211, 238, 0.6),
+                        inset 0 8px 0 rgba(255,255,255,0.3),
+                        inset 0 -8px 0 rgba(0,0,0,0.4);
+            border: 6px solid #fff;
+            background: linear-gradient(145deg, #f59e0b, #ef4444);
+            color: white;
+            text-shadow: 3px 3px 0 #000;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .answer-box.revealed {
+            animation: revealPop 0.6s ease forwards;
+            box-shadow: 0 0 30px #22d3ee,
+                        inset 0 8px 0 rgba(255,255,255,0.4);
+        }
+
+        @keyframes revealPop {
+            0% { transform: scale(0.3) rotate(-12deg); opacity: 0; }
+            70% { transform: scale(1.15) rotate(8deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .mystery-box {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .category-reveal {
+            animation: categoryReveal 0.8s ease forwards;
+        }
+
+        @keyframes categoryReveal {
+            0% { transform: scale(0.4) rotate(-20deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-[#0a1428] text-white overflow-hidden">
+    <div class="min-h-screen flex flex-col bg-gradient-to-br from-[#0a1428] via-[#1e3a8a] to-[#0a1428]">
+        <!-- HEADER -->
+        <header class="bg-black/80 border-b-4 border-cyan-400 py-4 px-8 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="text-5xl">🌴</div>
+                <div>
+                    <h1 class="text-5xl font-bold tracking-widest text-cyan-300">GIMME 5</h1>
+                    <p class="text-cyan-100 text-sm -mt-1 tracking-[4px]">LARO NG MGA HENYO</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="round-display" class="px-10 py-3 bg-cyan-950 border-2 border-cyan-300 rounded-2xl text-2xl font-bold">ROUND 1</div>
+                <button onclick="toggleScoreboard()" class="flex items-center gap-3 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/30 rounded-2xl transition">
+                    <i class="fa-solid fa-trophy"></i><span>SCOREBOARD</span>
+                </button>
+                <button onclick="resetGame()" class="flex items-center gap-3 px-6 py-3 bg-red-600/80 hover:bg-red-700 border border-red-400 rounded-2xl transition">
+                    <i class="fa-solid fa-rotate-right"></i><span>RESET</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-1 overflow-hidden">
+            <!-- TEAMS -->
+            <div class="w-80 bg-black/70 border-r border-cyan-400 p-6 flex flex-col">
+                <h2 class="text-cyan-300 text-xl mb-6">TEAMS</h2>
+                <div id="teams-container" class="space-y-6"></div>
+            </div>
+
+            <!-- GAME AREA -->
+            <div class="flex-1 p-10 flex flex-col relative">
+                <!-- CATEGORY SELECTION -->
+                <div id="category-selection" class="flex-1 flex flex-col items-center justify-center">
+                    <h2 class="text-5xl font-bold mb-2 text-white">CHOOSE CATEGORY</h2>
+                    <p class="text-cyan-300 text-2xl mb-12">TEAM <span id="picking-team" class="text-amber-300 font-bold">A</span> PICKS</p>
+                    <div id="mystery-grid" class="grid grid-cols-5 gap-8 w-full max-w-6xl"></div>
+                </div>
+
+                <!-- ROUND 1 GAMEPLAY -->
+                <div id="round1-screen" class="hidden flex-1 flex flex-col">
+                    <div class="flex justify-between mb-8">
+                        <div class="flex-1 pr-8">
+                            <div class="flex items-center gap-6">
+                                <div id="r1-icon" class="text-8xl transition-all category-reveal"></div>
+                                <div class="flex-1">
+                                    <div id="r1-category" class="text-5xl font-bold text-white category-reveal"></div>
+                                    <div id="r1-question" class="text-3xl text-amber-200 mt-6 leading-tight font-medium"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs tracking-[2px] text-white/60">TIME REMAINING</div>
+                            <div id="r1-timer" class="timer text-8xl font-bold text-white border-8 border-cyan-400 bg-black/60 w-52 py-4 rounded-3xl">45</div>
+                        </div>
+                    </div>
+
+                    <div id="answers-container" class="grid grid-cols-5 gap-6 flex-1"></div>
+
+                    <div class="mt-8 bg-black/70 border border-cyan-400 rounded-3xl p-6 max-w-2xl mx-auto w-full">
+                        <div class="flex gap-3">
+                            <input id="answer-input" type="text" 
+                                   class="flex-1 bg-zinc-900 text-2xl px-6 py-5 rounded-2xl border border-cyan-300 focus:border-white outline-none"
+                                   placeholder="Sagutan dito..." onkeypress="if(event.key==='Enter') submitR1Answer()">
+                            <button onclick="submitR1Answer()" id="submit-r1"
+                                    class="px-10 bg-cyan-400 hover:bg-cyan-300 text-black font-bold text-xl rounded-2xl">SUBMIT</button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center gap-4 mt-6">
+                        <button onclick="startR1Timer()" id="r1-start-btn"
+                                class="px-12 py-6 bg-lime-500 hover:bg-lime-400 text-black text-2xl font-bold rounded-3xl shadow-2xl">
+                            START TIMER
+                        </button>
+                        <button onclick="proceedToNextTeam()" id="proceed-btn"
+                                class="hidden px-12 py-6 bg-amber-500 hover:bg-amber-400 text-black text-2xl font-bold rounded-3xl shadow-2xl">
+                            PROCEED TO NEXT TEAM →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ROUND 1 SUMMARY -->
+                <div id="round1-summary" class="hidden flex-1 flex flex-col items-center justify-center">
+                    <h2 class="text-5xl font-bold text-amber-300 mb-8">ROUND 1 COMPLETE</h2>
+                    <div class="bg-zinc-900 border-4 border-cyan-400 rounded-3xl p-8 w-full max-w-2xl">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b border-cyan-400">
+                                    <th class="py-4 px-6 text-cyan-300">TEAM</th>
+                                    <th class="py-4 px-6 text-cyan-300 text-center">SCORE</th>
+                                    <th class="py-4 px-6 text-cyan-300 text-center">TIME USED</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summary-table" class="text-xl"></tbody>
+                        </table>
+                    </div>
+                    <button onclick="proceedToRound2()" 
+                            class="mt-12 px-16 py-8 bg-white text-black text-3xl font-bold rounded-3xl hover:scale-105 transition">
+                        CONTINUE TO HENYO ROUND →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="h-20 bg-black/80 border-t-4 border-cyan-400 flex items-center px-8 text-sm">
+            <div id="footer-status" class="flex-1 text-cyan-200"></div>
+            <div onclick="revealRemaining()" id="reveal-button"
+                 class="hidden px-8 py-4 bg-amber-400 text-black font-bold rounded-2xl cursor-pointer hover:bg-amber-300">
+                REVEAL REMAINING
+            </div>
+        </footer>
+    </div>
+
+    <!-- SCOREBOARD -->
+    <div id="scoreboard-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+        <div class="bg-zinc-900 border-4 border-cyan-400 rounded-3xl w-full max-w-md">
+            <div class="bg-cyan-900 px-8 py-6 text-center text-3xl font-bold border-b border-cyan-400">SCOREBOARD</div>
+            <div id="scoreboard-body" class="p-8 space-y-4"></div>
+            <div class="p-6 border-t border-cyan-400 flex justify-end">
+                <button onclick="toggleScoreboard()" class="px-10 py-4 bg-white/10 hover:bg-white/20 rounded-2xl">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Combined SET1 + SET2 Questions
+        const questionsData = {
+            "BAGAY": [
+                { q: "MGA BAGAY NA MAY ILAW SA BAHAY", a: ["Bombilya", "TV", "Flashlight", "Electric Fan", "Christmas Lights"] },
+                { q: "MGA BAGAY SA BAHAY NA MADALING MASIRA", a: ["Salamin", "Plato", "Charger", "Headphones", "Remote"] }
+            ],
+            "HAYOP": [
+                { q: "HAYOP NA NAKAKALANGOY AT NAKAKALAKAD", a: ["Palaka", "Pagong", "Buwaya", "Bibe", "Itik"] },
+                { q: "HAYOP NA HINDI KARANIWANG ALAGA", a: ["Ahas", "Iguana", "Tarantula", "Buwaya", "Unggoy"] }
+            ],
+            "LUGAR": [
+                { q: "LUGAR NA MAY MAHABANG PILA KADALASAN", a: ["Banko", "Grocery", "Fast Food", "Terminal", "Hospital"] },
+                { q: "LUGAR NA BAWAL ANG MAINGAY", a: ["Library", "Hospital", "Simbahan", "Classroom", "Office"] }
+            ],
+            "TAO": [
+                { q: "TAONG NAGTUTURO SA PAARALAN", a: ["Teacher", "Professor", "Tutor", "Instructor", "Principal"] },
+                { q: "TAONG NAGTATRABAHO SA GABI", a: ["Security Guard", "Call Center Agent", "Nurse", "Driver", "Baker"] }
+            ],
+            "PAGKAIN": [
+                { q: "PAGKAIN NA MATAMIS", a: ["Cake", "Ice Cream", "Chocolate", "Candy", "Donut"] },
+                { q: "PAGKAIN NA MAY SABAW NA HINDI SOPAS", a: ["Sinigang", "Nilaga", "Bulalo", "Tinola", "Mami"] }
+            ]
+        };
+
+        const categoryIcons = { 
+            "TAO": "🧑‍🏫", 
+            "HAYOP": "🐶", 
+            "BAGAY": "🎁", 
+            "LUGAR": "🏖️", 
+            "PAGKAIN": "🍔" 
+        };
+
+        let teams = [
+            { id: "A", name: "TEAM A", score: 0, lastTime: 45, color: "#facc15", active: true },
+            { id: "B", name: "TEAM B", score: 0, lastTime: 45, color: "#22d3ee", active: true },
+            { id: "C", name: "TEAM C", score: 0, lastTime: 45, color: "#c084fc", active: true }
+        ];
+
+        let currentTeam = 0;
+        let usedCategories = new Set();
+        let currentCategory = null;
+        let currentQ = null;
+        let answeredIndices = [];
+        let timer = null;
+        let timeRemaining = 45;
+        let isTimerRunning = false;
+
+        let audioCtx;
+
+        function initAudio() {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playTick() {
+            if (!audioCtx) return;
+            const o = audioCtx.createOscillator(); o.frequency.value = 1600; o.connect(audioCtx.destination);
+            o.start(); setTimeout(()=>o.stop(), 40);
+        }
+
+        function playCorrect() {
+            if (!audioCtx) return;
+            const o = audioCtx.createOscillator(); o.frequency.setValueAtTime(700, audioCtx.currentTime);
+            o.frequency.linearRampToValueAtTime(1400, audioCtx.currentTime + 0.25);
+            o.connect(audioCtx.destination); o.start(); setTimeout(()=>o.stop(), 250);
+        }
+
+        function playWrong() {
+            if (!audioCtx) return;
+            const o = audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=180;
+            o.connect(audioCtx.destination); o.start(); setTimeout(()=>o.stop(), 180);
+        }
+
+        function shuffle(arr) { return [...arr].sort(()=>Math.random()-0.5); }
+
+        function renderTeams() {
+            const cont = document.getElementById("teams-container");
+            cont.innerHTML = "";
+            teams.forEach((t,i)=>{
+                const active = i===currentTeam && t.active;
+                const div = document.createElement("div");
+                div.className = `p-6 rounded-3xl border-4 ${active?"border-white bg-white/10":"border-transparent bg-white/5"} ${!t.active ? 'opacity-50' : ''}`;
+                div.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div style="background:${t.color}" class="w-12 h-12 flex items-center justify-center text-3xl font-black rounded-2xl text-black">${t.id}</div>
+                            <div><div class="text-2xl font-bold">${t.name}</div><div class="text-xs text-white/50">USED: ${45 - t.lastTime}s</div></div>
+                        </div>
+                        <div class="text-6xl font-bold">${t.score}</div>
+                    </div>`;
+                cont.appendChild(div);
+            });
+        }
+
+        function renderMysteryBoxes() {
+            const grid = document.getElementById("mystery-grid");
+            grid.innerHTML = "";
+            shuffle(Object.keys(questionsData)).forEach(cat => {
+                const used = usedCategories.has(cat);
+                const box = document.createElement("div");
+                box.className = `mystery-box aspect-square bg-gradient-to-br from-indigo-700 to-violet-700 border-4 border-white/70 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:scale-110 ${used ? "opacity-30 pointer-events-none" : ""}`;
+                box.innerHTML = `<div class="text-8xl mb-4">📦</div><div class="text-white/30 text-sm">MYSTERY</div>`;
+                if (!used) box.onclick = () => pickCategory(cat);
+                grid.appendChild(box);
+            });
+        }
+
+        function pickCategory(cat) {
+            usedCategories.add(cat);
+            currentCategory = cat;
+            const categoryQs = questionsData[cat];
+            currentQ = categoryQs[Math.floor(Math.random() * categoryQs.length)];
+
+            document.getElementById("category-selection").classList.add("hidden");
+            document.getElementById("round1-screen").classList.remove("hidden");
+
+            const iconEl = document.getElementById("r1-icon");
+            const catEl = document.getElementById("r1-category");
+            
+            iconEl.textContent = categoryIcons[cat];
+            catEl.textContent = cat;
+            
+            iconEl.classList.remove("category-reveal");
+            catEl.classList.remove("category-reveal");
+            void iconEl.offsetWidth;
+            void catEl.offsetWidth;
+            iconEl.classList.add("category-reveal");
+            catEl.classList.add("category-reveal");
+
+            document.getElementById("r1-question").textContent = currentQ.q;
+
+            answeredIndices = [];
+            renderAnswerBoxes();
+            resetTurnUI();
+        }
+
+        function renderAnswerBoxes() {
+            const container = document.getElementById("answers-container");
+            container.innerHTML = "";
+            for (let i = 0; i < 5; i++) {
+                const box = document.createElement("div");
+                box.className = "answer-box h-40 rounded-3xl flex items-center justify-center text-3xl text-center p-4 leading-tight";
+                box.innerHTML = `<span class="opacity-30">???</span>`;
+                container.appendChild(box);
+            }
+        }
+
+        function resetTurnUI() {
+            document.getElementById("r1-start-btn").style.display = "block";
+            document.getElementById("proceed-btn").classList.add("hidden");
+            document.getElementById("reveal-button").classList.add("hidden");
+            document.getElementById("answer-input").disabled = true;
+            document.getElementById("submit-r1").disabled = true;
+        }
+
+        function startR1Timer() {
+            document.getElementById("r1-start-btn").style.display = "none";
+            document.getElementById("answer-input").disabled = false;
+            document.getElementById("submit-r1").disabled = false;
+            timeRemaining = 45;
+            isTimerRunning = true;
+            document.getElementById("r1-timer").textContent = "45";
+            if (timer) clearInterval(timer);
+            timer = setInterval(() => {
+                timeRemaining--;
+                document.getElementById("r1-timer").textContent = timeRemaining;
+                playTick();
+                if (timeRemaining <= 10) document.getElementById("r1-timer").classList.add("text-red-400");
+                if (timeRemaining <= 0) endCurrentTurn();
+            }, 1000);
+        }
+
+        function submitR1Answer() {
+            if (!isTimerRunning) return;
+            const input = document.getElementById("answer-input");
+            const guess = input.value.trim().toLowerCase();
+            if (!guess) return;
+
+            const correct = currentQ.a.map(a => a.toLowerCase().trim());
+            const index = correct.indexOf(guess);
+
+            if (index !== -1 && !answeredIndices.includes(index)) {
+                answeredIndices.push(index);
+                playCorrect();
+                const boxes = document.querySelectorAll("#answers-container > div");
+                boxes[index].classList.add("revealed");
+                boxes[index].innerHTML = `<span>${currentQ.a[index]}</span>`;
+                teams[currentTeam].score++;
+                teams[currentTeam].lastTime = timeRemaining;
+                renderTeams();
+
+                if (answeredIndices.length === 5) {
+                    clearInterval(timer);
+                    isTimerRunning = false;
+                    setTimeout(() => proceedToNextTeam(), 1200);
+                }
+            } else {
+                playWrong();
+                input.classList.add("!border-red-500");
+                setTimeout(()=>input.classList.remove("!border-red-500"), 400);
+            }
+            input.value = "";
+        }
+
+        function endCurrentTurn() {
+            if (timer) clearInterval(timer);
+            isTimerRunning = false;
+            document.getElementById("reveal-button").classList.remove("hidden");
+            document.getElementById("answer-input").disabled = true;
+            document.getElementById("submit-r1").disabled = true;
+        }
+
+        function revealRemaining() {
+            const boxes = document.querySelectorAll("#answers-container > div");
+            currentQ.a.forEach((ans, i) => {
+                if (!answeredIndices.includes(i)) {
+                    boxes[i].classList.add("revealed");
+                    boxes[i].innerHTML = `<span class="line-through opacity-70">${ans}</span>`;
+                }
+            });
+            document.getElementById("reveal-button").classList.add("hidden");
+            document.getElementById("proceed-btn").classList.remove("hidden");
+        }
+
+        function proceedToNextTeam() {
+            currentTeam = (currentTeam + 1) % 3;
+            
+            if (usedCategories.size >= 3) {
+                showRound1Summary();
+                return;
+            }
+
+            document.getElementById("round1-screen").classList.add("hidden");
+            document.getElementById("category-selection").classList.remove("hidden");
+            document.getElementById("picking-team").textContent = teams[currentTeam].id;
+            renderMysteryBoxes();
+            renderTeams();
+        }
+
+        function showRound1Summary() {
+            document.getElementById("round1-screen").classList.add("hidden");
+            const summaryScreen = document.getElementById("round1-summary");
+            summaryScreen.classList.remove("hidden");
+
+            const tbody = document.getElementById("summary-table");
+            tbody.innerHTML = "";
+
+            const sorted = [...teams].sort((a,b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return b.lastTime - a.lastTime;
+            });
+
+            sorted.forEach((t, idx) => {
+                const isAdvancing = idx < 2 && t.score > 0;
+                const timeUsed = 45 - t.lastTime;
+                const row = document.createElement("tr");
+                row.className = `border-b border-zinc-700 last:border-0 ${isAdvancing ? 'bg-emerald-900/40' : ''}`;
+                row.innerHTML = `
+                    <td class="py-5 px-6 font-bold ${isAdvancing ? 'text-emerald-400' : ''}">${t.name}</td>
+                    <td class="py-5 px-6 text-center text-3xl">${t.score}</td>
+                    <td class="py-5 px-6 text-center">${timeUsed}s</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function proceedToRound2() {
+            alert("ROUND 1 COMPLETE!\n\nTop 2 teams advance to HENYO ROUND.\n\n(Round 2 coming soon...)");
+        }
+
+        function toggleScoreboard() {
+            const modal = document.getElementById("scoreboard-modal");
+            const body = document.getElementById("scoreboard-body");
+            body.innerHTML = "";
+            [...teams].sort((a,b)=>b.score-a.score).forEach(t=>{
+                const row = document.createElement("div");
+                row.className = "flex justify-between items-center bg-zinc-800 px-6 py-5 rounded-2xl";
+                row.innerHTML = `<div class="flex items-center gap-5"><div style="background:${t.color}" class="w-14 h-14 flex items-center justify-center text-4xl rounded-2xl font-black">${t.id}</div><div class="text-2xl">${t.name}</div></div><div class="text-6xl font-bold">${t.score}</div>`;
+                body.appendChild(row);
+            });
+            modal.classList.toggle("hidden");
+        }
+
+        function resetGame() {
+            if(confirm("Reset entire game?")) location.reload();
+        }
+
+        window.onload = () => {
+            initAudio();
+            renderTeams();
+            renderMysteryBoxes();
+            document.getElementById("picking-team").textContent = "A";
+        };
+    </script>
+</body>
+</html>
