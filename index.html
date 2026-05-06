@@ -42,6 +42,11 @@
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        .mystery-box:hover {
+            transform: scale(1.28) rotate(5deg);
+            box-shadow: 0 0 30px #00f0ff;
+        }
+
         .category-reveal {
             animation: categoryReveal 0.8s ease forwards;
         }
@@ -87,7 +92,7 @@
                 <div id="category-selection" class="flex-1 flex flex-col items-center justify-center">
                     <h2 class="text-5xl font-bold mb-2 text-white">CHOOSE CATEGORY</h2>
                     <p class="text-cyan-300 text-2xl mb-12">TEAM <span id="picking-team" class="text-amber-300 font-bold">A</span> PICKS</p>
-                    <div id="mystery-grid" class="grid grid-cols-5 gap-8 w-full max-w-6xl"></div>
+                    <div id="mystery-grid" class="grid grid-cols-5 gap-8 w-full max-w-6x2"></div>
                 </div>
 
                 <!-- ROUND 1 GAMEPLAY -->
@@ -110,13 +115,14 @@
 
                     <div id="answers-container" class="grid grid-cols-5 gap-6 flex-1"></div>
 
-                    <div class="mt-8 bg-black/70 border border-cyan-400 rounded-3xl p-6 max-w-2xl mx-auto w-full">
+                    <!-- Fixed Input Container -->
+                    <div class="mt-8 bg-black/50 border border-cyan-400 rounded-3xl p-6 max-w-1xl mx-auto w-full">
                         <div class="flex gap-3">
                             <input id="answer-input" type="text" 
                                    class="flex-1 bg-zinc-900 text-2xl px-6 py-5 rounded-2xl border border-cyan-300 focus:border-white outline-none"
                                    placeholder="Sagutan dito..." onkeypress="if(event.key==='Enter') submitR1Answer()">
                             <button onclick="submitR1Answer()" id="submit-r1"
-                                    class="px-10 bg-cyan-400 hover:bg-cyan-300 text-black font-bold text-xl rounded-2xl">SUBMIT</button>
+                                    class="px-5 bg-cyan-400 hover:bg-cyan-300 text-black font-bold text-xl rounded-2xl whitespace-nowrap">SUBMIT</button>
                         </div>
                     </div>
 
@@ -176,27 +182,36 @@
     </div>
 
     <script>
-        // Combined SET1 + SET2 Questions
         const questionsData = {
             "BAGAY": [
                 { q: "MGA BAGAY NA MAY ILAW SA BAHAY", a: ["Bombilya", "TV", "Flashlight", "Electric Fan", "Christmas Lights"] },
-                { q: "MGA BAGAY SA BAHAY NA MADALING MASIRA", a: ["Salamin", "Plato", "Charger", "Headphones", "Remote"] }
+                { q: "MGA BAGAY SA BAHAY NA MADALING MASIRA", a: ["Salamin", "Plato", "Charger", "Headphones", "Remote"] },
+                { q: "English, THINGS YOU CAN CHARGE", a: ["Cellphone", "Laptop", "Powerbank", "Bluetooth Speaker", "Electric Fan"] },
+                { q: "English, THINGS YOU FIND INSIDE A BAG", a: ["Powerbank", "Alcohol Spray", "Earphones", "Tissue", "Makeup Kit"] }
             ],
             "HAYOP": [
                 { q: "HAYOP NA NAKAKALANGOY AT NAKAKALAKAD", a: ["Palaka", "Pagong", "Buwaya", "Bibe", "Itik"] },
-                { q: "HAYOP NA HINDI KARANIWANG ALAGA", a: ["Ahas", "Iguana", "Tarantula", "Buwaya", "Unggoy"] }
+                { q: "HAYOP NA HINDI KARANIWANG ALAGA", a: ["Ahas", "Iguana", "Tarantula", "Buwaya", "Unggoy"] },
+                { q: "English, ANIMALS THAT CAN FLY WITH THE LETTER O", a: ["Owl", "Parrot", "Pigeon", "Mosquito", "Dragonfly"] },
+                { q: "English, ANIMALS WITH HORNS", a: ["Antelope", "Rhino", "Elk", "Gazelle", "Moose"] }
             ],
             "LUGAR": [
                 { q: "LUGAR NA MAY MAHABANG PILA KADALASAN", a: ["Banko", "Grocery", "Fast Food", "Terminal", "Hospital"] },
-                { q: "LUGAR NA BAWAL ANG MAINGAY", a: ["Library", "Hospital", "Simbahan", "Classroom", "Office"] }
+                { q: "LUGAR NA BAWAL ANG MAINGAY", a: ["Library", "Hospital", "Simbahan", "Classroom", "Office"] },
+                { q: "LUGAR NA MAY MARARAMING LIBRO", a: ["Library", "School", "Bookstore", "Office", "Study Room"] },
+                { q: "LUGAR NA MAY SECURITY CHECK", a: ["Airport", "Mall Entrance", "Concert Venue", "Government Office", "Hotel"] }
             ],
             "TAO": [
                 { q: "TAONG NAGTUTURO SA PAARALAN", a: ["Teacher", "Professor", "Tutor", "Instructor", "Principal"] },
-                { q: "TAONG NAGTATRABAHO SA GABI", a: ["Security Guard", "Call Center Agent", "Nurse", "Driver", "Baker"] }
+                { q: "TAONG NAGTATRABAHO SA GABI", a: ["Security Guard", "Call Center Agent", "Nurse", "Driver", "Baker"] },
+                { q: "English, PEOPLE WHO WORK IN A HOSPITAL", a: ["Doctor", "Nurse", "Surgeon", "Pharmacist", "Janitor"] },
+                { q: "TAONG MAY SUOT NA UNIPORME", a: ["Chef", "Flight Attendant", "Police", "Construction Worker", "Delivery Rider"] }
             ],
             "PAGKAIN": [
                 { q: "PAGKAIN NA MATAMIS", a: ["Cake", "Ice Cream", "Chocolate", "Candy", "Donut"] },
-                { q: "PAGKAIN NA MAY SABAW NA HINDI SOPAS", a: ["Sinigang", "Nilaga", "Bulalo", "Tinola", "Mami"] }
+                { q: "PAGKAIN NA MAY SABAW NA HINDI SOPAS", a: ["Sinigang", "Nilaga", "Bulalo", "Tinola", "Mami"] },
+                { q: "PAGKAIN NA KARANIWANG NASA HANDAAN", a: ["Spaghetti", "Lumpia", "Pancit", "Lechon", "Fried Chicken"] },
+                { q: "PAGKAIN NA KARANIWANG MAY SAUCE", a: ["Fried Chicken", "Fish Ball", "Spaghetti", "Lumpia", "Siomai"] }
             ]
         };
 
@@ -275,7 +290,7 @@
             shuffle(Object.keys(questionsData)).forEach(cat => {
                 const used = usedCategories.has(cat);
                 const box = document.createElement("div");
-                box.className = `mystery-box aspect-square bg-gradient-to-br from-indigo-700 to-violet-700 border-4 border-white/70 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:scale-110 ${used ? "opacity-30 pointer-events-none" : ""}`;
+                box.className = `mystery-box bg-gradient-to-br from-indigo-600 to-violet-700 border-4 border-white/80 h-56 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:from-amber-500 hover:to-orange-500 group hover:scale-110 ${used ? "opacity-30 pointer-events-none" : ""}`;
                 box.innerHTML = `<div class="text-8xl mb-4">📦</div><div class="text-white/30 text-sm">MYSTERY</div>`;
                 if (!used) box.onclick = () => pickCategory(cat);
                 grid.appendChild(box);
@@ -342,7 +357,6 @@
                 timeRemaining--;
                 document.getElementById("r1-timer").textContent = timeRemaining;
                 playTick();
-                if (timeRemaining <= 10) document.getElementById("r1-timer").classList.add("text-red-400");
                 if (timeRemaining <= 0) endCurrentTurn();
             }, 1000);
         }
